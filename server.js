@@ -19,8 +19,12 @@ const userRoutes = require('./routes/users');
 const uploadRoutes = require('./routes/upload');  
 
 // Middleware
-app.use(helmet());   
-// Parse CORS origins from environment variable
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: "cross-origin" },
+  contentSecurityPolicy: false // Disable CSP for now to avoid conflicts
+}));   
+
+// CORS Configuration - More permissive for debugging
 const corsOrigins = process.env.CORS_ORIGIN 
   ? process.env.CORS_ORIGIN.split(',')
   : [
@@ -32,10 +36,22 @@ const corsOrigins = process.env.CORS_ORIGIN
       'https://rent-moment-frontend.vercel.app'
     ];
 
+// More permissive CORS configuration for debugging
 app.use(cors({
-  origin: corsOrigins,
-  credentials: true
+  origin: true, // Allow all origins temporarily for debugging
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Origin', 'Accept']
 }));
+
+// Add CORS preflight handler
+app.options('*', cors());
+
+// Request logging middleware for debugging
+app.use((req, res, next) => {
+  console.log(`${new Date().toISOString()} - ${req.method} ${req.path} - Origin: ${req.headers.origin || 'No origin'}`);
+  next();
+});
  
 // Rate limiting
 const limiter = rateLimit({
@@ -64,7 +80,25 @@ app.use('/api/upload', uploadRoutes);
 
 // Health check route
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'OK', message: 'Server is running' });
+  res.json({ 
+    status: 'OK', 
+    message: 'Server is running',
+    cors: {
+      origin: req.headers.origin,
+      allowedOrigins: corsOrigins,
+      headers: req.headers
+    },
+    timestamp: new Date().toISOString()
+  });
+});
+
+// CORS test route
+app.get('/api/cors-test', (req, res) => {
+  res.json({ 
+    message: 'CORS is working!',
+    origin: req.headers.origin,
+    timestamp: new Date().toISOString()
+  });
 });
 
 // Error handling middleware
