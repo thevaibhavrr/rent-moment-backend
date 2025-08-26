@@ -7,6 +7,9 @@ require('dotenv').config();
  
 const app = express();  
 
+// Trust proxy for rate limiting behind reverse proxies (Render, etc.)
+app.set('trust proxy', 1);
+
 // Import routes
 const authRoutes = require('./routes/auth'); 
 const categoryRoutes = require('./routes/categories');
@@ -24,7 +27,9 @@ const corsOrigins = process.env.CORS_ORIGIN
       'http://localhost:3000', 
       'http://localhost:3001',
       'https://saloni-cloths.vercel.app',
-      'https://rent-the-moment-admin.vercel.app'
+      'https://rent-the-moment-admin.vercel.app',
+      'https://rent-the-moment.vercel.app', // Add your frontend domain
+      'https://rent-moment-frontend.vercel.app' // Alternative frontend domain
     ];
 
 app.use(cors({
@@ -35,7 +40,10 @@ app.use(cors({
 // Rate limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100 // limit each IP to 100 requests per windowMs
+  max: 100, // limit each IP to 100 requests per windowMs
+  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+  // Trust proxy is already set above, so this should work correctly
 });
 app.use(limiter);
 
