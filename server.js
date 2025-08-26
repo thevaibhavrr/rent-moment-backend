@@ -28,8 +28,8 @@ const corsOrigins = process.env.CORS_ORIGIN
       'http://localhost:3001',
       'https://saloni-cloths.vercel.app',
       'https://rent-the-moment-admin.vercel.app',
-      'https://rent-the-moment.vercel.app', // Add your frontend domain
-      'https://rent-moment-frontend.vercel.app' // Alternative frontend domain
+      'https://rent-the-moment.vercel.app',
+      'https://rent-moment-frontend.vercel.app'
     ];
 
 app.use(cors({
